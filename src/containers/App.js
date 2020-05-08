@@ -1,129 +1,78 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
+import './App.css'
 
-import InputBox from './InputBox';
-import TodoList from './TodoList';
-import Pagination from './Pagination';
-import './App.css';
-
-class App extends Component {
-  constructor(props){
-    super(props);
-    this.state = {
-      todoText: '',
-      todos:[],
-      category: 'all',
-    }
-  }
-
-  onTodoTextChange = (event) => {
-    this.setState({todoText:event.target.value})
-    
-  }
-
-  onChangeCategory=(event)=>{
-    this.setState({category: event.target.value});
-  }
-
-  onIsCompleted = (todo) => {
-    todo.completed = !todo.completed;
-    let replaceIndex = (this.state.todos.length) - 1 - todo.id;
-    // 先把已改變的todo取代原本為改變的todo
-    this.state.todos.splice(replaceIndex, 1, todo);
-    // 然後再更新state
-    this.setState({todos:this.state.todos})
-
-  }
-
-  onChangeEdit = (todo) => {
-    todo.isEdit = !todo.isEdit;
-    let replaceIndex = (this.state.todos.length) - 1 - todo.id;
-    // 先把已改變的todo取代原本為改變的todo
-    this.state.todos.splice(replaceIndex, 1, todo);
-    // 然後再更新state
-    this.setState({todos:this.state.todos})
-  }
-
-  onAddtodo = (event) => {
-    if(this.state.todoText){
-      if(event.keyCode === 13){
-        let newId = this.state.todos.length
-        let newtodo = {
-          id: newId,
-          title: this.state.todoText,
-          completed:false,
-          isEdit: false,
-        }
-        this.setState(state => {
-          return {todos:[newtodo, ...state.todos],todoText:''}
-        })
-        event.target.value = '';
-        console.log(this.state.todos)
-      }
-    }
-  }
-
-  onDeletetodo = (id) =>{
-    let replaceIndex = (this.state.todos.length) - 1 - id;
-    this.state.todos.splice(replaceIndex, 1)
-    this.setState({todos: this.state.todos})
-  }
-
- editTodo =(e,todo) =>{
-  if(e.keyCode === 13){
-    if(this.state.todoText){
-      todo.title = this.state.todoText;
-      todo.isEdit =  !todo.isEdit;
-      let replaceIndex = (this.state.todos.length) - 1 - todo.id;
-      // 先把已改變的todo取代原本為改變的todo
-      this.state.todos.splice(replaceIndex, 1, todo);
-      // 然後再更新state
-      this.setState({todos:this.state.todos})
-      e.target.value = ''
-    }else {
-      todo.isEdit =  !todo.isEdit;
-      let replaceIndex = (this.state.todos.length) - 1 - todo.id;
-      // 先把已改變的todo取代原本為改變的todo
-      this.state.todos.splice(replaceIndex, 1, todo);
-      // 然後再更新state
-      this.setState({todos:this.state.todos})
-    }
-  }
- }
-
- 
-
-
-  render(){
-    const filtertodo = this.state.todos.filter(todo => {
-      switch(this.state.category){
-        case 'not done':
-          return todo.completed === false;
-        case 'done':
-          return todo.completed === true;
-        default:
-          return todo;
-      }
-    })
-    return (
+function Todo({todo, index, completeTodo, deleteTodo}) {
+  return (
+    <div className="todo" style={{textDecoration: todo.isCompleted? "line-through": ''}}>
+      { todo.text }
       <div>
-        <h1>TodoList</h1>
-        <InputBox 
-          onTodoTextChange={this.onTodoTextChange}
-          onAddtodo={this.onAddtodo}
-          />
-        <TodoList 
-          todos = {filtertodo}
-          onIsCompleted={this.onIsCompleted} 
-          onChangeCategory={this.onChangeCategory}
-          onDeletetodo= {this.onDeletetodo}
-          onChangeEdit={this.onChangeEdit}
-          onTodoTextChange={this.onTodoTextChange}
-          editTodo={this.editTodo}
-          />
-        <Pagination />
+        <button onClick={()=>completeTodo(index)}>Complete</button>
+        <button onClick={()=>deleteTodo(index)}>x</button>
+
       </div>
-    )
+    </div>
+  )
+}
+
+function TodoForm({addTodo}) {
+  const [value, setValue] = useState('');
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if(!value) return;
+    addTodo(value);
+    setValue('');
   }
+
+  return(
+    <form onSubmit={handleSubmit}>
+      <input placeholder="add Todo ..." type="text" className="input" value={value} onChange={e => setValue(e.target.value)} />
+    </form>
+  )
+}
+
+function App() {
+  const [todos, setTodos] = useState([
+    {
+      text: 'learn new React',
+      isCompleted: false,
+    },
+    {
+      text: 'learn new  Hook',
+      isCompleted: false,
+    },
+    {
+      text: 'learn new Redux HIII1',
+      isCompleted: false,
+    }
+  ]);
+
+  const addTodo = text => {
+    const newTodos = [...todos, { text }];
+    setTodos(newTodos);
+  }
+  const completeTodo = index => {
+    const newTodos = [...todos];
+    newTodos[index].isCompleted = true;
+    setTodos(newTodos);
+  }
+
+  const deleteTodo = index => {
+    const newTodos = [...todos];
+    newTodos.splice(index, 1);
+    setTodos(newTodos);
+  }
+
+  return(
+    <div className="app">
+      <div className="todo-list">
+        {todos.map((todo, index)=>(
+          <Todo key={index} index={index} todo={todo} completeTodo={completeTodo} deleteTodo={deleteTodo} />
+        ))}
+        <TodoForm addTodo={addTodo} />
+      </div>
+    </div>
+  )
 }
 
 export default App;
